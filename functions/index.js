@@ -11,10 +11,6 @@ const { auth } = functions;
 //  response.send("Hello from Firebase!");
 // });
 
-const firestore = new Firestore();
-const settings = { timestampsInSnapshots: true };
-firestore.settings(settings);
-
 exports.createProfile = auth.user().onCreate(user => {
   // Do something after a new user account is created
   console.log('creating a new account???', user);
