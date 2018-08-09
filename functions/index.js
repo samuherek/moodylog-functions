@@ -3,6 +3,7 @@ const admin = require('firebase-admin');
 
 admin.initializeApp(functions.config().firebase);
 
+const { auth } = functions;
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
@@ -10,7 +11,11 @@ admin.initializeApp(functions.config().firebase);
 //  response.send("Hello from Firebase!");
 // });
 
-exports.createProfile = functions.auth.user().onCreate(user => {
+const firestore = new Firestore();
+const settings = { timestampsInSnapshots: true };
+firestore.settings(settings);
+
+exports.createProfile = auth.user().onCreate(user => {
   // Do something after a new user account is created
   console.log('creating a new account???', user);
 
@@ -31,5 +36,21 @@ exports.createProfile = functions.auth.user().onCreate(user => {
     .catch(err => {
       console.log('ERROR: user creation:', err);
       return;
+    });
+});
+
+exports.deleteProfile = auth.user().onDelete(user => {
+  console.log('deleting an account', user);
+  return admin
+    .firestore()
+    .collection('users')
+    .doc(user.uid)
+    .delete()
+    .then(() => {
+      console.log('user deleted!');
+      return;
+    })
+    .catch(error => {
+      console.error('error removing user', error);
     });
 });
