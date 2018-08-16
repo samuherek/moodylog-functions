@@ -4,6 +4,7 @@ const admin = require('firebase-admin');
 admin.initializeApp(functions.config().firebase);
 
 const { auth } = functions;
+const { firestore } = admin;
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
@@ -11,34 +12,36 @@ const { auth } = functions;
 //  response.send("Hello from Firebase!");
 // });
 
+const settings = { timestampsInSnapshots: true };
+firestore.settings(settings);
+
 exports.createProfile = auth.user().onCreate(user => {
-  // Do something after a new user account is created
-  console.log('creating a new account???', user);
+  console.log('Creating profile...');
+  const { email, displayName, uid } = user;
 
   const profile = {
-    email: user.email,
-    displayName: user.displayName
+    email,
+    displayName: displayName || 'Anonymous',
+    logs: [{ id: 'mood', name: 'Mood', createdAt: new Date(), active: true }]
   };
 
-  return admin
-    .firestore()
+  return firestore()
     .collection(`users`)
-    .doc(user.uid)
+    .doc(uid)
     .set(profile)
     .then(result => {
       console.log('SUCCESS: user created:', result);
       return;
     })
     .catch(err => {
-      console.log('ERROR: user creation:', err);
+      console.error('ERROR: user creation:', err);
       return;
     });
 });
 
 exports.deleteProfile = auth.user().onDelete(user => {
-  console.log('deleting an account', user);
-  return admin
-    .firestore()
+  console.log('Deleting profile...', user);
+  return firestore()
     .collection('users')
     .doc(user.uid)
     .delete()
